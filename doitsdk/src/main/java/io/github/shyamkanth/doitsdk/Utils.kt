@@ -1,5 +1,9 @@
 package io.github.shyamkanth.doitsdk
 
+import android.annotation.SuppressLint
+import android.app.Activity
+import android.app.AlertDialog
+import android.app.DatePickerDialog
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -7,9 +11,49 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.Typeface
-import androidx.core.content.ContextCompat
+import android.graphics.drawable.ColorDrawable
+import android.view.LayoutInflater
+import android.view.View
+import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
+import io.github.shyamkanth.doitsdk.databinding.LayoutAlertBinding
+import io.github.shyamkanth.doitsdk.databinding.LayoutInfoBinding
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 object Utils {
+
+    enum class AlertAction {
+        PRIMARY,
+        SECONDARY
+    }
+
+    @SuppressLint("DefaultLocale")
+    fun showDatePicker(editText: EditText, context: Context) {
+        val calendar = Calendar.getInstance()
+        val year = calendar.get(Calendar.YEAR)
+        val month = calendar.get(Calendar.MONTH)
+        val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+        val datePickerDialog = DatePickerDialog(
+            context,
+            { _, selectedYear, selectedMonth, selectedDay ->
+                val formattedDate = String.format("%02d-%02d-%04d", selectedDay, selectedMonth + 1, selectedYear)
+                editText.setText(formattedDate)
+            }, year, month, day
+        )
+        datePickerDialog.datePicker.maxDate = System.currentTimeMillis()
+        datePickerDialog.show()
+    }
+
+
+    fun getTodayDate(): String {
+        val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
+        return dateFormat.format(Date())
+    }
+
     fun generateInitialsImage(
         initials: String,
         position: Int,
@@ -54,5 +98,77 @@ object Utils {
 
         return bitmap
     }
+
+
+    fun openAlertDialog(
+        activity: Activity,
+        alertTitle: String,
+        alertMessage: String,
+        btnPrimaryText: String,
+        btnSecondaryText: String,
+        isCancelable: Boolean,
+        onResult: (AlertAction) -> Unit
+    ) {
+        val alertBinding = LayoutAlertBinding.inflate(LayoutInflater.from(activity))
+        val alertDialog = AlertDialog.Builder(activity)
+            .setView(alertBinding.root)
+            .setCancelable(isCancelable)
+            .create()
+
+        alertBinding.tvAlertTitle.text = alertTitle
+        alertBinding.tvAlertMessage.text = alertMessage
+        alertBinding.btnPrimary.text = btnPrimaryText
+        alertBinding.btnSecondary.text = btnSecondaryText
+        alertDialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        alertDialog.show()
+
+        alertBinding.btnSecondary.setOnClickListener {
+            onResult(AlertAction.SECONDARY)
+            alertDialog.dismiss()
+        }
+
+        alertBinding.btnPrimary.setOnClickListener {
+            onResult(AlertAction.PRIMARY)
+            alertDialog.dismiss()
+        }
+
+    }
+
+    fun openInfoDialog(
+        activity: Activity,
+        dialogTitle: String,
+        dialogMessage: String,
+        btnPrimaryText: String,
+        isCancelable: Boolean,
+        onDismiss: () -> Unit = {}
+    ) {
+        val alertBinding = LayoutInfoBinding.inflate(LayoutInflater.from(activity))
+        val alertDialog = AlertDialog.Builder(activity)
+            .setView(alertBinding.root)
+            .setCancelable(isCancelable)
+            .create()
+
+        alertBinding.tvAlertTitle.text = dialogTitle
+        alertBinding.tvAlertMessage.text = dialogMessage
+        alertBinding.btnPrimary.text = btnPrimaryText
+        alertDialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        alertDialog.show()
+
+        alertBinding.btnPrimary.setOnClickListener {
+            alertDialog.dismiss()
+        }
+
+        alertDialog.setOnDismissListener {
+            onDismiss()
+        }
+
+    }
+
+    fun hideKeyboard(context: Context, view: View) {
+        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
+    }
+
+
 
 }
