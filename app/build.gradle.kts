@@ -48,7 +48,7 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-//    implementation("com.github.shyamkanth:do-it-sdk:1.0.1")
-    implementation(project(":doitsdk"))
+    implementation("com.github.shyamkanth:do-it-sdk:1.0.2")
+//    implementation(project(":doitsdk"))
     
 }
